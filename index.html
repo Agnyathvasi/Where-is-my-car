@@ -9,7 +9,7 @@
     font-family: 'Poppins', sans-serif;
     margin: 0;
     padding: 0;
-    background: linear-gradient(180deg,#89f7fe 0%,#66a6ff 100%);
+    background: linear-gradient(180deg,#a1c4fd 0%,#c2e9fb 100%);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -20,48 +20,47 @@
     color: #004aad;
     margin: 20px 0 10px;
     font-size: 28px;
+    text-align: center;
   }
 
-  /* Highway animation */
-  .highway {
+  /* --- Scene (vehicles + humans) --- */
+  .scene {
     position: relative;
     width: 100%;
     max-width: 480px;
-    height: 110px;
-    background: #333;
+    height: 120px;
+    background: #444;
     border-radius: 60px;
-    margin-bottom: 15px;
     overflow: hidden;
-    box-shadow: inset 0 2px 10px rgba(0,0,0,0.4);
+    margin-bottom: 20px;
+    box-shadow: inset 0 3px 10px rgba(0,0,0,0.5);
   }
 
   .lane {
     position: absolute;
-    top: 48%;
+    top: 50%;
+    left: 0;
     width: 100%;
     height: 4px;
     background: repeating-linear-gradient(to right,#fff 0 20px,transparent 20px 40px);
-    animation: moveLane 1.2s linear infinite;
   }
 
-  @keyframes moveLane {
-    from { background-position: 0; }
-    to { background-position: 40px; }
-  }
-
-  .vehicle {
+  .moving {
     position: absolute;
     font-size: 28px;
-    animation: drive 6s linear infinite;
   }
 
-  .v1 { top: 15px; animation-delay: 0s; }
-  .v2 { top: 40px; animation-delay: 1s; }
-  .v3 { top: 65px; animation-delay: 2s; }
-  .v4 { top: 85px; animation-delay: 3s; }
+  .person {
+    font-size: 24px;
+  }
 
-  @keyframes drive {
-    0% { left: -80px; }
+  @keyframes moveVehicle {
+    0% { left: -100px; }
+    100% { left: 100%; }
+  }
+
+  @keyframes walk {
+    0% { left: -50px; }
     100% { left: 100%; }
   }
 
@@ -106,6 +105,7 @@
     overflow: hidden;
     box-shadow: 0 2px 6px rgba(0,0,0,0.15);
     margin-bottom: 40px;
+    table-layout: fixed;
   }
 
   th, td {
@@ -113,7 +113,9 @@
     padding: 8px;
     text-align: center;
     font-size: 13px;
-    word-break: break-word;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   th {
@@ -142,6 +144,40 @@
     height: 60px;
     object-fit: cover;
     border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+
+  img.preview:hover { transform: scale(1.1); }
+
+  /* Image popup */
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 100;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.8);
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-content {
+    max-width: 95%;
+    max-height: 80%;
+    border-radius: 12px;
+  }
+
+  .close {
+    position: absolute;
+    top: 15px;
+    right: 25px;
+    color: white;
+    font-size: 32px;
+    font-weight: bold;
+    cursor: pointer;
   }
 
   @media (max-width: 500px) {
@@ -152,12 +188,8 @@
 <body>
   <h1>🚗 Parking Tracker 🏍️</h1>
 
-  <div class="highway">
+  <div class="scene" id="scene">
     <div class="lane"></div>
-    <div class="vehicle v1">🚗💨</div>
-    <div class="vehicle v2">🏍️💨</div>
-    <div class="vehicle v3">🚙💨</div>
-    <div class="vehicle v4">🛵💨</div>
   </div>
 
   <form id="parkingForm">
@@ -184,11 +216,43 @@
     <tbody></tbody>
   </table>
 
+  <!-- Image popup -->
+  <div id="imageModal" class="modal">
+    <span class="close" id="closeModal">&times;</span>
+    <img class="modal-content" id="modalImage">
+  </div>
+
 <script>
 const form = document.getElementById('parkingForm');
 const tableBody = document.querySelector('#parkingTable tbody');
 let editingIndex = null;
 
+/* -------- VEHICLE + HUMAN RANDOM MOVEMENT -------- */
+const scene = document.getElementById("scene");
+const vehicles = ["🚗","🚙","🚕","🏍️","🛵","🚓"];
+const people = ["🚶‍♂️","🚶‍♀️","🧍‍♂️","🧍‍♀️"];
+
+function randomMove(){
+  const el = document.createElement("div");
+  el.classList.add("moving");
+  el.textContent = Math.random() > 0.3 ? 
+    vehicles[Math.floor(Math.random()*vehicles.length)] : 
+    people[Math.floor(Math.random()*people.length)];
+  
+  el.style.top = Math.random()*90 + "px";
+  const duration = 4 + Math.random()*5;
+  el.style.animation = `${el.textContent.match(/🚶/) ? "walk" : "moveVehicle"} ${duration}s linear`;
+  el.style.animationFillMode = "forwards";
+  el.style.animationIterationCount = 1;
+
+  scene.appendChild(el);
+  el.addEventListener("animationend",()=>el.remove());
+  
+  setTimeout(randomMove, 800 + Math.random()*2000);
+}
+randomMove();
+
+/* -------- DATA STORAGE -------- */
 function cleanExpiredImages(data){
   const now = Date.now();
   return data.filter(entry => !entry.photoTime || now - entry.photoTime < 24*60*60*1000);
@@ -201,7 +265,7 @@ function loadData(){
   tableBody.innerHTML = '';
   data.forEach((entry, index)=>{
     const row = document.createElement('tr');
-    const imgCell = entry.photo ? `<img src="${entry.photo}" class="preview">` : '—';
+    const imgCell = entry.photo ? `<img src="${entry.photo}" class="preview" onclick="openModal('${entry.photo}')">` : '—';
     row.innerHTML = `
       <td>${entry.name}</td>
       <td>${entry.vehicleNumber}</td>
@@ -218,6 +282,7 @@ function loadData(){
   });
 }
 
+/* -------- CRUD -------- */
 function deleteEntry(index){
   const data = JSON.parse(localStorage.getItem('parkingData')) || [];
   data.splice(index,1);
@@ -229,13 +294,10 @@ function startEdit(index){
   const data = JSON.parse(localStorage.getItem('parkingData')) || [];
   const entry = data[index];
   editingIndex = index;
-
-  // Only allow editing floor and pillar
   form.floorNumber.value = entry.floorNumber;
   form.pillarNumber.value = entry.pillarNumber;
   document.getElementById('submitButton').style.display='none';
 
-  // Create Save and Cancel buttons dynamically
   const saveBtn = document.createElement('button');
   saveBtn.textContent = '💾 Save';
   saveBtn.className = 'save-btn';
@@ -252,12 +314,43 @@ function startEdit(index){
   form.appendChild(cancelBtn);
 }
 
-function saveEdit(index){
+async function compressImage(file){
+  return new Promise(resolve=>{
+    const reader = new FileReader();
+    reader.onload = e=>{
+      const img = new Image();
+      img.onload = ()=>{
+        const canvas = document.createElement('canvas');
+        const scale = Math.min(300 / img.width, 300 / img.height, 1);
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', 0.6));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+async function saveEdit(index){
   let data = JSON.parse(localStorage.getItem('parkingData')) || [];
   const now = new Date();
+  const formattedDate = now.toLocaleString();
+
+  let photoData = data[index].photo;
+  const photoFile = form.photo.files[0];
+  if(photoFile){
+    photoData = await compressImage(photoFile);
+  }
+
   data[index].floorNumber = form.floorNumber.value;
   data[index].pillarNumber = form.pillarNumber.value;
-  data[index].dateTime = now.toLocaleString();
+  data[index].photo = photoData;
+  data[index].photoTime = Date.now();
+  data[index].dateTime = formattedDate;
+
   localStorage.setItem('parkingData', JSON.stringify(data));
   cancelEdit();
   loadData();
@@ -281,11 +374,7 @@ form.addEventListener('submit', async e=>{
   let photoData = null;
   const photoFile = form.photo.files[0];
   if(photoFile){
-    const reader = new FileReader();
-    photoData = await new Promise(resolve=>{
-      reader.onload = ()=>resolve(reader.result);
-      reader.readAsDataURL(photoFile);
-    });
+    photoData = await compressImage(photoFile);
   }
 
   const newEntry = {
@@ -299,7 +388,6 @@ form.addEventListener('submit', async e=>{
   };
 
   let data = JSON.parse(localStorage.getItem('parkingData')) || [];
-  // If same name already exists, update instead of new record
   const existingIndex = data.findIndex(d=>d.name.toLowerCase()===newEntry.name.toLowerCase());
   if(existingIndex !== -1){
     data[existingIndex] = newEntry;
@@ -311,6 +399,21 @@ form.addEventListener('submit', async e=>{
   form.reset();
   loadData();
 });
+
+/* --- Image popup --- */
+function openModal(src){
+  const modal = document.getElementById("imageModal");
+  const modalImg = document.getElementById("modalImage");
+  modal.style.display = "flex";
+  modalImg.src = src;
+}
+document.getElementById("closeModal").onclick = function() {
+  document.getElementById("imageModal").style.display = "none";
+};
+window.onclick = function(event) {
+  const modal = document.getElementById("imageModal");
+  if (event.target === modal) modal.style.display = "none";
+};
 
 loadData();
 </script>
