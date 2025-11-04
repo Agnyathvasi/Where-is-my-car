@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Parking Finder</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f8f9fa;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+    }
+    h1 {
+      text-align: center;
+    }
+    form {
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    input {
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 8px;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: center;
+    }
+    th {
+      background-color: #007bff;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <h1>🚗 Parking Tracker</h1>
+  <form id="parkingForm">
+    <input type="text" id="username" placeholder="Username" required>
+    <input type="text" id="vehicleNumber" placeholder="Vehicle Number" required>
+    <input type="text" id="pillarNumber" placeholder="Pillar Number" required>
+    <input type="text" id="contact" placeholder="Contact" required>
+    <button type="submit">Add Parking Info</button>
+  </form>
+
+  <table id="parkingTable">
+    <thead>
+      <tr>
+        <th>Username</th>
+        <th>Vehicle No</th>
+        <th>Pillar</th>
+        <th>Contact</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    const form = document.getElementById('parkingForm');
+    const tableBody = document.querySelector('#parkingTable tbody');
+
+    function loadData() {
+      const data = JSON.parse(localStorage.getItem('parkingData')) || [];
+      tableBody.innerHTML = '';
+      data.forEach(entry => {
+        const row = `<tr>
+          <td>${entry.username}</td>
+          <td>${entry.vehicleNumber}</td>
+          <td>${entry.pillarNumber}</td>
+          <td>${entry.contact}</td>
+        </tr>`;
+        tableBody.innerHTML += row;
+      });
+    }
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const newEntry = {
+        username: form.username.value,
+        vehicleNumber: form.vehicleNumber.value,
+        pillarNumber: form.pillarNumber.value,
+        contact: form.contact.value
+      };
+      const data = JSON.parse(localStorage.getItem('parkingData')) || [];
+      data.push(newEntry);
+      localStorage.setItem('parkingData', JSON.stringify(data));
+      form.reset();
+      loadData();
+    });
+
+    loadData();
+  </script>
+</body>
+</html>
