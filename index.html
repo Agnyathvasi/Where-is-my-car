@@ -1,76 +1,129 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Parking Finder</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🚗 Parking Tracker</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f8f9fa;
+      background: linear-gradient(180deg, #e3f2fd, #ffffff);
       padding: 20px;
-      max-width: 600px;
+      max-width: 800px;
       margin: auto;
     }
     h1 {
       text-align: center;
+      color: #0d6efd;
+      margin-bottom: 20px;
+    }
+    .animation {
+      text-align: center;
+      margin-bottom: 20px;
+      position: relative;
+      height: 80px;
+      overflow: hidden;
+    }
+    .car, .bike {
+      position: absolute;
+      top: 0;
+      animation: move 6s linear infinite;
+      font-size: 30px;
+    }
+    .bike {
+      top: 40px;
+      animation-duration: 4s;
+    }
+    @keyframes move {
+      0% { left: -100px; }
+      100% { left: 100%; }
     }
     form {
       background: white;
-      padding: 15px;
-      border-radius: 10px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      margin-bottom: 20px;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+      margin-bottom: 25px;
     }
     input {
       width: 100%;
-      margin-bottom: 10px;
-      padding: 8px;
+      margin-bottom: 12px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 15px;
     }
     button {
       width: 100%;
       padding: 10px;
-      background-color: #007bff;
+      background-color: #0d6efd;
       color: white;
       border: none;
-      border-radius: 5px;
+      border-radius: 6px;
+      font-size: 16px;
       cursor: pointer;
+    }
+    button:hover {
+      background-color: #0b5ed7;
     }
     table {
       width: 100%;
       border-collapse: collapse;
       background: white;
-      border-radius: 10px;
+      border-radius: 12px;
       overflow: hidden;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
     th, td {
       border: 1px solid #ddd;
-      padding: 8px;
+      padding: 10px;
       text-align: center;
+      font-size: 14px;
     }
     th {
-      background-color: #007bff;
+      background-color: #0d6efd;
       color: white;
+    }
+    td button {
+      background-color: #dc3545;
+      border: none;
+      color: white;
+      padding: 6px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    td button:hover {
+      background-color: #bb2d3b;
     }
   </style>
 </head>
 <body>
   <h1>🚗 Parking Tracker</h1>
+
+  <div class="animation">
+    <div class="car">🚗💨</div>
+    <div class="bike">🏍️💨</div>
+  </div>
+
   <form id="parkingForm">
-    <input type="text" id="username" placeholder="Username" required>
+    <input type="text" id="name" placeholder="Name" required>
     <input type="text" id="vehicleNumber" placeholder="Vehicle Number" required>
+    <input type="text" id="floorNumber" placeholder="Floor Number" required>
     <input type="text" id="pillarNumber" placeholder="Pillar Number" required>
     <input type="text" id="contact" placeholder="Contact" required>
-    <button type="submit">Add Parking Info</button>
+    <button type="submit">Add / Update Parking Info</button>
   </form>
 
   <table id="parkingTable">
     <thead>
       <tr>
-        <th>Username</th>
+        <th>Name</th>
         <th>Vehicle No</th>
+        <th>Floor</th>
         <th>Pillar</th>
         <th>Contact</th>
+        <th>Date & Time</th>
+        <th>Action</th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -83,27 +136,54 @@
     function loadData() {
       const data = JSON.parse(localStorage.getItem('parkingData')) || [];
       tableBody.innerHTML = '';
-      data.forEach(entry => {
-        const row = `<tr>
-          <td>${entry.username}</td>
+      data.forEach((entry, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${entry.name}</td>
           <td>${entry.vehicleNumber}</td>
+          <td>${entry.floorNumber}</td>
           <td>${entry.pillarNumber}</td>
           <td>${entry.contact}</td>
-        </tr>`;
-        tableBody.innerHTML += row;
+          <td>${entry.dateTime}</td>
+          <td><button onclick="deleteEntry(${index})">Delete</button></td>
+        `;
+        tableBody.appendChild(row);
       });
+    }
+
+    function deleteEntry(index) {
+      const data = JSON.parse(localStorage.getItem('parkingData')) || [];
+      data.splice(index, 1);
+      localStorage.setItem('parkingData', JSON.stringify(data));
+      loadData();
     }
 
     form.addEventListener('submit', e => {
       e.preventDefault();
+      const now = new Date();
+      const formattedDate = now.toLocaleString();
+
       const newEntry = {
-        username: form.username.value,
-        vehicleNumber: form.vehicleNumber.value,
-        pillarNumber: form.pillarNumber.value,
-        contact: form.contact.value
+        name: form.name.value.trim(),
+        vehicleNumber: form.vehicleNumber.value.trim(),
+        floorNumber: form.floorNumber.value.trim(),
+        pillarNumber: form.pillarNumber.value.trim(),
+        contact: form.contact.value.trim(),
+        dateTime: formattedDate
       };
-      const data = JSON.parse(localStorage.getItem('parkingData')) || [];
-      data.push(newEntry);
+
+      let data = JSON.parse(localStorage.getItem('parkingData')) || [];
+
+      // Check if this name already exists
+      const existingIndex = data.findIndex(e => e.name.toLowerCase() === newEntry.name.toLowerCase());
+      if (existingIndex !== -1) {
+        // Update the record
+        data[existingIndex] = newEntry;
+      } else {
+        // Add a new one
+        data.push(newEntry);
+      }
+
       localStorage.setItem('parkingData', JSON.stringify(data));
       form.reset();
       loadData();
