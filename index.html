@@ -6,103 +6,164 @@
   <title>🚗 Parking Tracker</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: linear-gradient(180deg, #e3f2fd, #ffffff);
-      padding: 20px;
-      max-width: 800px;
-      margin: auto;
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(180deg, #a8edea 0%, #fed6e3 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
+
     h1 {
       text-align: center;
-      color: #0d6efd;
-      margin-bottom: 20px;
+      color: #004aad;
+      margin: 20px 0 10px;
+      font-size: 28px;
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
     }
-    .animation {
-      text-align: center;
-      margin-bottom: 20px;
+
+    /* Highway animation */
+    .highway {
       position: relative;
-      height: 80px;
+      width: 100%;
+      max-width: 450px;
+      height: 100px;
+      background: #333;
+      border-radius: 50px;
       overflow: hidden;
+      margin-bottom: 15px;
+      box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
     }
-    .car, .bike {
+
+    .lane {
       position: absolute;
-      top: 0;
-      animation: move 6s linear infinite;
-      font-size: 30px;
+      top: 48%;
+      width: 100%;
+      height: 4px;
+      background: repeating-linear-gradient(
+        to right,
+        #fff 0 20px,
+        transparent 20px 40px
+      );
+      animation: moveLane 1.5s linear infinite;
     }
+
+    @keyframes moveLane {
+      from { background-position: 0; }
+      to { background-position: 40px; }
+    }
+
+    .vehicle {
+      position: absolute;
+      font-size: 32px;
+      animation: drive 6s linear infinite;
+    }
+
     .bike {
-      top: 40px;
-      animation-duration: 4s;
+      font-size: 30px;
+      top: 60px;
+      animation-duration: 5s;
     }
-    @keyframes move {
-      0% { left: -100px; }
+
+    @keyframes drive {
+      0% { left: -80px; }
       100% { left: 100%; }
     }
+
     form {
       background: white;
+      width: 90%;
+      max-width: 420px;
       padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
       margin-bottom: 25px;
     }
+
     input {
       width: 100%;
       margin-bottom: 12px;
-      padding: 10px;
+      padding: 12px;
       border: 1px solid #ccc;
-      border-radius: 6px;
+      border-radius: 8px;
       font-size: 15px;
+      box-sizing: border-box;
     }
+
     button {
       width: 100%;
-      padding: 10px;
-      background-color: #0d6efd;
+      padding: 12px;
+      background: linear-gradient(90deg, #007bff, #00bcd4);
       color: white;
       border: none;
-      border-radius: 6px;
+      border-radius: 8px;
       font-size: 16px;
       cursor: pointer;
+      transition: 0.3s ease;
     }
+
     button:hover {
-      background-color: #0b5ed7;
+      opacity: 0.9;
+      transform: scale(1.02);
     }
+
     table {
-      width: 100%;
+      width: 90%;
+      max-width: 420px;
       border-collapse: collapse;
       background: white;
       border-radius: 12px;
       overflow: hidden;
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      margin-bottom: 40px;
     }
+
     th, td {
       border: 1px solid #ddd;
-      padding: 10px;
+      padding: 8px;
       text-align: center;
-      font-size: 14px;
+      font-size: 13px;
+      word-break: break-word;
     }
+
     th {
-      background-color: #0d6efd;
+      background: linear-gradient(90deg, #004aad, #007bff);
       color: white;
     }
+
     td button {
-      background-color: #dc3545;
       border: none;
       color: white;
       padding: 6px 10px;
-      border-radius: 4px;
+      border-radius: 5px;
       cursor: pointer;
+      font-size: 12px;
+      transition: 0.2s;
     }
+
+    .delete-btn { background-color: #dc3545; }
+    .update-btn { background-color: #28a745; margin-bottom: 5px; }
+
     td button:hover {
-      background-color: #bb2d3b;
+      transform: scale(1.05);
+    }
+
+    @media (max-width: 500px) {
+      form, table {
+        width: 95%;
+      }
     }
   </style>
 </head>
 <body>
-  <h1>🚗 Parking Tracker</h1>
+  <h1>🚗 Parking Tracker 🏍️</h1>
 
-  <div class="animation">
-    <div class="car">🚗💨</div>
-    <div class="bike">🏍️💨</div>
+  <div class="highway">
+    <div class="lane"></div>
+    <div class="vehicle car">🚗💨</div>
+    <div class="vehicle bike">🏍️💨</div>
   </div>
 
   <form id="parkingForm">
@@ -111,14 +172,14 @@
     <input type="text" id="floorNumber" placeholder="Floor Number" required>
     <input type="text" id="pillarNumber" placeholder="Pillar Number" required>
     <input type="text" id="contact" placeholder="Contact" required>
-    <button type="submit">Add / Update Parking Info</button>
+    <button type="submit" id="submitButton">Add / Update Parking Info</button>
   </form>
 
   <table id="parkingTable">
     <thead>
       <tr>
         <th>Name</th>
-        <th>Vehicle No</th>
+        <th>Vehicle</th>
         <th>Floor</th>
         <th>Pillar</th>
         <th>Contact</th>
@@ -132,6 +193,7 @@
   <script>
     const form = document.getElementById('parkingForm');
     const tableBody = document.querySelector('#parkingTable tbody');
+    let updateIndex = null;
 
     function loadData() {
       const data = JSON.parse(localStorage.getItem('parkingData')) || [];
@@ -145,7 +207,10 @@
           <td>${entry.pillarNumber}</td>
           <td>${entry.contact}</td>
           <td>${entry.dateTime}</td>
-          <td><button onclick="deleteEntry(${index})">Delete</button></td>
+          <td>
+            <button class="update-btn" onclick="startUpdate(${index})">Update</button>
+            <button class="delete-btn" onclick="deleteEntry(${index})">Delete</button>
+          </td>
         `;
         tableBody.appendChild(row);
       });
@@ -156,6 +221,19 @@
       data.splice(index, 1);
       localStorage.setItem('parkingData', JSON.stringify(data));
       loadData();
+    }
+
+    function startUpdate(index) {
+      const data = JSON.parse(localStorage.getItem('parkingData')) || [];
+      const entry = data[index];
+      updateIndex = index;
+      form.name.value = entry.name;
+      form.vehicleNumber.value = entry.vehicleNumber;
+      form.floorNumber.value = entry.floorNumber;
+      form.pillarNumber.value = entry.pillarNumber;
+      form.contact.value = entry.contact;
+      document.getElementById('submitButton').textContent = 'Update Info';
+      alert("Please respective person change the data");
     }
 
     form.addEventListener('submit', e => {
@@ -174,13 +252,11 @@
 
       let data = JSON.parse(localStorage.getItem('parkingData')) || [];
 
-      // Check if this name already exists
-      const existingIndex = data.findIndex(e => e.name.toLowerCase() === newEntry.name.toLowerCase());
-      if (existingIndex !== -1) {
-        // Update the record
-        data[existingIndex] = newEntry;
+      if (updateIndex !== null) {
+        data[updateIndex] = newEntry;
+        updateIndex = null;
+        document.getElementById('submitButton').textContent = 'Add / Update Parking Info';
       } else {
-        // Add a new one
         data.push(newEntry);
       }
 
